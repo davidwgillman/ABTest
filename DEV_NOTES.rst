@@ -26,4 +26,7 @@ python manage.py schemamigration tracker --auto
 python manage.py migrate tracker
 These update the db after changes to the model.
 
+NOTE:  You need to follow the south team workflow for it to work:
+http://south.aeracode.org/wiki/Tutorial4
+
 
