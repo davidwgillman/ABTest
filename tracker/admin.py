@@ -48,6 +48,7 @@ class PatientStepInline(admin.StackedInline) :
 
 class PatientAdmin(admin.ModelAdmin) :
 	inlines = [PatientStepInline]
+	fields = (('name', 'dob'),('timeIn', 'timeOut')) 
 
 admin.site.register(Patient, PatientAdmin)
 #admin.site.register(PatientStep)
