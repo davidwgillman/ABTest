@@ -7,6 +7,9 @@ class Step(models.Model) :
 	def __unicode__(self) :
 		return self.name
 
+	class Meta:
+		ordering = ['number']
+
 class StepOutcome(models.Model) :
 	step = models.ForeignKey(Step)
 	name = models.CharField(max_length=50)

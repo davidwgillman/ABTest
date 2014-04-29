@@ -34,6 +34,7 @@ class NextStepConditionInline(admin.StackedInline) :
 			)
 
 class StepAdmin(admin.ModelAdmin) :
+	list_display = ('name',)
 	inlines = [StepOutcomeInline, NextStepConditionInline]
 
 admin.site.register(Step, StepAdmin)
