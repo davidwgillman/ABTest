@@ -51,7 +51,7 @@ class Patient(models.Model):
 	timeOut = models.DateTimeField('Time Out', null=True, blank=True)
 
 	def __unicode__(self) :
-		return self.name
+		return self.name + ' -- DOB ' + self.dob.strftime('%Y-%m-%d')
 
 class PatientStep(models.Model):
 	step = models.ForeignKey(Step)
@@ -60,14 +60,14 @@ class PatientStep(models.Model):
 	end = models.DateTimeField('End Time', null=True, blank=True)
 
 	def __unicode__(self) :
-		return unicode(self.step)
+		return unicode(self.patient) + ' -- ' +  unicode(self.step)
 
 class PatientOutcome(models.Model):
 	patientStep = models.ForeignKey(PatientStep)
-	stepOutcome = models.ForeignKey(StepOutcome)
-	value = models.CharField('Outcome Value', max_length=25)
+	name = models.CharField('Outcome Name', max_length=50)
+	value = models.CharField('Outcome Value', max_length=50)
 
 	def __unicode__(self) :
-		return unicode(self.stepOutcome)
+		return unicode(self.patientStep) + ' -- ' + self.name
 
 
