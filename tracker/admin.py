@@ -21,11 +21,17 @@ from tracker.models import Patient, PatientStep, PatientOutcome
 class StepOutcomeInline(admin.StackedInline) :
 	model = StepOutcome
 	extra = 0
+	fields = (('name', 'valueType'),) 
 
 class NextStepConditionInline(admin.StackedInline) :
 	model = NextStepCondition
 	extra = 0
 	fk_name = 'step'
+	fields = 	('step', ('priority', 'nextStep'), ('dependsOnStepNotDone', 'stepNotDone'),
+				('dependsOnOutcome', 'conditionalOutcome'), 
+				('comparator1', 'valueToCompare1'), 
+				('comparator2', 'valueToCompare2')
+			)
 
 class StepAdmin(admin.ModelAdmin) :
 	inlines = [StepOutcomeInline, NextStepConditionInline]
