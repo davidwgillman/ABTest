@@ -30,9 +30,9 @@ class NextStepCondition(models.Model) :
 	step = models.ForeignKey(Step, related_name='step') 
 	priority = models.IntegerField(default=1) # conditions are evaluated in order
 	dependsOnStepNotDone = models.BooleanField(default=False)
-	stepNotDone = models.ForeignKey(Step, null=True, related_name='stepNotDone')
+	stepNotDone = models.ForeignKey(Step, null=True, blank=True, related_name='stepNotDone')
 	dependsOnOutcome = models.BooleanField(default=False)
-	conditionalOutcome = models.ForeignKey(StepOutcome, null=True, related_name='conditionalOutcome')
+	conditionalOutcome = models.ForeignKey(StepOutcome, null=True, blank=True, related_name='conditionalOutcome')
 	comparator1 = models.CharField('Cmp1', max_length=2, blank=True, choices=COMPARATOR_CHOICES)
 	valueToCompare1 = models.CharField('Value1', max_length=50, blank=True)
 	comparator2 = models.CharField('Cmp2', max_length=2, blank=True, choices=COMPARATOR_CHOICES)
