@@ -42,15 +42,19 @@ class NextStepCondition(models.Model) :
 	def __unicode__(self) :
 		return unicode(self.step) + " Next-step Conditions"
 
+FLAG_LEVEL_CHOICES = (
+	('1', 'Warning'),
+	('2', 'Emergency')
+)
+
 class FlagCondition(models.Model) :
 	name = models.CharField(max_length=50)
 	stepOutcome = models.ForeignKey(StepOutcome)
-	comparator1 = models.CharField(max_length=2)
+	comparator1 = models.CharField(max_length=2, choices=COMPARATOR_CHOICES)
 	valueToCompare1 = models.CharField(max_length=50)
-	comparator2 = models.CharField(max_length=2, blank=True)
+	comparator2 = models.CharField(max_length=2, blank=True, choices=COMPARATOR_CHOICES)
 	valueToCompare2 = models.CharField(max_length=50, blank=True)
-	value = models.BooleanField(default=False)
-	level = models.CharField('Warning Level', max_length=50, blank=True)
+	level = models.CharField('Warning Level', max_length=50, blank=True, choices=FLAG_LEVEL_CHOICES)
 
 	def __unicode__(self) :
 		return self.name
@@ -81,4 +85,4 @@ class PatientOutcome(models.Model):
 	def __unicode__(self) :
 		return unicode(self.patientStep) + ' -- ' + self.name
 
-
+# Add PatientFlag class
