@@ -10,29 +10,47 @@ class Step(models.Model) :
 	class Meta:
 		ordering = ['number']
 
+
+
 class StepOutcome(models.Model) :
+        BOOLEAN = 'boolean'
+        FLOAT = 'float'
+        VALUE_TYPES = (
+        (BOOLEAN, 'True/False'),
+        (FLOAT, 'Number')
+)
+        
 	step = models.ForeignKey(Step)
 	name = models.CharField(max_length=50)
-	valueType = models.CharField(max_length=50, blank=True)
+	valueType = models.CharField(max_length=50, blank=True, choices=VALUE_TYPES)
 
 	def __unicode__(self) :
-		return unicode(self.step) + " Outcomes"
+		return unicode(self.name) #+ " Outcome"
 
-COMPARATOR_CHOICES = (
+
+
+
+class NextStepCondition(models.Model) :
+        # Why do these have to be strings of length 2 or less?
+        TRUE = 'TR'
+        FALSE = 'FA'
+        COMPARATOR_CHOICES = (
 	('<', 'less than'),
 	('<=', 'less than or equal to'),
 	('==', 'equal to'),
 	('>', 'greater than'),
-	('>=', 'greater than or equal to')
+	('>=', 'greater than or equal to'),
+        (TRUE, 'True'),
+        (FALSE, 'False')
 )
+	step = models.ForeignKey(Step, related_name='step')
 
-class NextStepCondition(models.Model) :
-	step = models.ForeignKey(Step, related_name='step') 
+	# Use that number plus one, for the default priority when a new condition is made in the admin page.
 	priority = models.IntegerField(default=1) # conditions are evaluated in order
 	dependsOnStepNotDone = models.BooleanField(default=False)
-	stepNotDone = models.ForeignKey(Step, null=True, related_name='stepNotDone')
+	stepNotDone = models.ForeignKey(Step, null=True, blank=True, related_name='stepNotDone')
 	dependsOnOutcome = models.BooleanField(default=False)
-	conditionalOutcome = models.ForeignKey(StepOutcome, null=True, related_name='conditionalOutcome')
+	conditionalOutcome = models.ForeignKey(StepOutcome, null=True, blank=True, related_name='conditionalOutcome')
 	comparator1 = models.CharField('Cmp1', max_length=2, blank=True, choices=COMPARATOR_CHOICES)
 	valueToCompare1 = models.CharField('Value1', max_length=50, blank=True)
 	comparator2 = models.CharField('Cmp2', max_length=2, blank=True, choices=COMPARATOR_CHOICES)
@@ -40,6 +58,7 @@ class NextStepCondition(models.Model) :
 	nextStep = models.ForeignKey(Step, related_name='nextStep')
 
 	def __unicode__(self) :
+<<<<<<< HEAD
 		return unicode(self.step) + " Next-step Conditions"
 
 FLAG_LEVEL_CHOICES = (
@@ -47,6 +66,18 @@ FLAG_LEVEL_CHOICES = (
 	('2', 'Emergency')
 )
 
+=======
+		return unicode(self.step) #+ " Next-step Conditions"
+                                        # ^ this was creating duplicates in the admin page descriptions
+
+# Need to figure out how to use this. Having trouble here. I want this called each time a
+# NextStepCondition object is made.
+def get_default_priority(step):
+        List_of_previous_objects = NextStepCondition.objects.filter(step__name=step)
+        default_priority = List_of_previous_objects.count() + 1
+        return default_priority
+        
+>>>>>>> fd0aed973ec9bdb8288fa1de2f02b75b6444b7ab
 class FlagCondition(models.Model) :
 	name = models.CharField(max_length=50)
 	stepOutcome = models.ForeignKey(StepOutcome)
