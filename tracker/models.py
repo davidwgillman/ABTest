@@ -29,12 +29,12 @@ class StepOutcome(models.Model) :
 
 
 
-
-class NextStepCondition(models.Model) :
-        # Why do these have to be strings of length 2 or less?
-        TRUE = 'TR'
-        FALSE = 'FA'
-        COMPARATOR_CHOICES = (
+# NJ: Why do these have to be strings of length 2 or less?
+# DG: This is used by more than one class, and each attribute is declared with max_length=2
+# True and False are built-in Python boolean values.
+TRUE = 'TR'
+FALSE = 'FA'
+COMPARATOR_CHOICES = (
 	('<', 'less than'),
 	('<=', 'less than or equal to'),
 	('==', 'equal to'),
@@ -43,6 +43,8 @@ class NextStepCondition(models.Model) :
         (TRUE, 'True'),
         (FALSE, 'False')
 )
+
+class NextStepCondition(models.Model) :
 	step = models.ForeignKey(Step, related_name='step')
 
 	# Use that number plus one, for the default priority when a new condition is made in the admin page.
@@ -58,26 +60,20 @@ class NextStepCondition(models.Model) :
 	nextStep = models.ForeignKey(Step, related_name='nextStep')
 
 	def __unicode__(self) :
-<<<<<<< HEAD
-		return unicode(self.step) + " Next-step Conditions"
+		return unicode(self.step) 
+
+	# Need to figure out how to use this. Having trouble here. I want this called each time a
+	# NextStepCondition object is made.
+	def get_default_priority(step):
+	        List_of_previous_objects = NextStepCondition.objects.filter(step__name=step)
+	        default_priority = List_of_previous_objects.count() + 1
+	        return default_priority
 
 FLAG_LEVEL_CHOICES = (
 	('1', 'Warning'),
 	('2', 'Emergency')
 )
-
-=======
-		return unicode(self.step) #+ " Next-step Conditions"
-                                        # ^ this was creating duplicates in the admin page descriptions
-
-# Need to figure out how to use this. Having trouble here. I want this called each time a
-# NextStepCondition object is made.
-def get_default_priority(step):
-        List_of_previous_objects = NextStepCondition.objects.filter(step__name=step)
-        default_priority = List_of_previous_objects.count() + 1
-        return default_priority
         
->>>>>>> fd0aed973ec9bdb8288fa1de2f02b75b6444b7ab
 class FlagCondition(models.Model) :
 	name = models.CharField(max_length=50)
 	stepOutcome = models.ForeignKey(StepOutcome)

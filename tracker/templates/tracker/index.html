@@ -1,0 +1,10 @@
+{% if patientList %}
+    <ul>
+    {% for patient in patientList %}
+        <li><a href="/tracker/{{ patient.id }}/">{{ unicode(patient }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No patients are available.</p>
+{% endif %}
+
