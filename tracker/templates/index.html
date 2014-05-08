@@ -15,8 +15,9 @@
 	</head>
 	
 	<body>
+		{% if patientList %}
 		<div class="panel-group" id="accordion">
-		{ % for patient in patientList % }
+			{% for patient in patientList %}
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h4 class="panel-title">
@@ -38,7 +39,11 @@
 					</div>
 				</div>
 			</div>
+			{% endfor %}
 		</div>
+		{% endif %}
+
+	
 	</body>
 	
 	<footer>
