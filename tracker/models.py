@@ -1,4 +1,6 @@
 from django.db import models
+from django import forms
+from datetime import datetime
 
 class Step(models.Model) :
 	name = models.CharField(max_length=50)
@@ -113,3 +115,11 @@ class PatientOutcome(models.Model):
 		return unicode(self.patientStep) + ' -- ' + self.name
 
 # Add PatientFlag class
+
+class PatientForm(forms.ModelForm):
+    timeIn = forms.DateTimeField(initial=datetime.now)
+    class Meta:
+        model = Patient
+        fields = ['name', 'dob', 'timeIn']
+
+
