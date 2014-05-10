@@ -27,10 +27,11 @@ class NextStepConditionInline(admin.StackedInline) :
 	model = NextStepCondition
 	extra = 0
 	fk_name = 'step'
-	fields = 	('step', ('priority', 'nextStep'), ('dependsOnStepNotDone', 'stepNotDone'),
+	fields = 	('step', 'priority', ('dependsOnStepNotDone', 'stepNotDone'),
 				('dependsOnOutcome', 'conditionalOutcome'), 
 				('comparator1', 'valueToCompare1'), 
-				('comparator2', 'valueToCompare2')
+				('comparator2', 'valueToCompare2'),
+                         'nextStep'
 			)
 
 class StepAdmin(admin.ModelAdmin) :
