@@ -93,6 +93,8 @@ class Patient(models.Model):
 	dob = models.DateField('Date of Birth')
 	timeIn = models.DateTimeField('Time In')
 	timeOut = models.DateTimeField('Time Out', null=True, blank=True)
+	last_step = models.ForeignKey(Step, null=True, blank=True, related_name='last_step')
+	current_step = models.ForeignKey(Step, null=True, blank=True, related_name='current_step')
 
 	def __unicode__(self) :
 		return self.name + ' -- DOB ' + self.dob.strftime('%Y-%m-%d')
@@ -117,7 +119,7 @@ class PatientOutcome(models.Model):
 # Add PatientFlag class
 
 class PatientForm(forms.ModelForm):
-    timeIn = forms.DateTimeField(initial=datetime.now)
+    #timeIn = forms.DateTimeField(initial=datetime.now)
     class Meta:
         model = Patient
         fields = ['name', 'dob', 'timeIn']

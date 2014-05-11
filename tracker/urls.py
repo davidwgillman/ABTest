@@ -4,7 +4,7 @@ from tracker import views
 
 urlpatterns = patterns('',
     # ex: /tracker/
-    url(r'^$', views.index, name='index'),
+    url(r'^$', views.everything_tracker, name='everything_tracker'),
     # ex: /tracker/bootstrap/
 #    url(r'^bootstrap/$', views.bootstrap, name='index-bootstrap'),
     # ex: /tracker/thanks/

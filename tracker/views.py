@@ -1,19 +1,26 @@
 from django.shortcuts import render
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 
 from tracker.models import Step, StepOutcome, NextStepCondition, FlagCondition
 from tracker.models import Patient, PatientStep, PatientOutcome, PatientForm
 
-def index(request):
-    if request.method == 'POST': # If the form has been submitted...
-        form = PatientForm(request.POST) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass
-            form.save()
-            return HttpResponseRedirect('thanks/') # Redirect after POST
-    else:
-        form = PatientForm() # An unbound form
+from datetime import datetime
 
-    return render(request, 'tracker/index.html', {'form': form})
+def everything_tracker(request):
+    if request.method == 'POST': # If the form has been submitted...
+        input_form = PatientForm(request.POST) # A form bound to the POST data
+        if input_form.is_valid(): # All validation rules pass
+            new_p = Patient.objects.create(name=input_form.cleaned_data['name'],
+                                   dob=input_form.cleaned_data['dob'],
+                                   timeIn=input_form.cleaned_data['timeIn'])
+            input_form.save()
+            
+            #return HttpResponseRedirect('thanks/') # Redirect after POST
+    
+    form = PatientForm(initial={'timeIn': datetime.now()}) # Blank form to add a new patient
+    patient_list = Patient.objects.all()
+    return render(request, 'tracker/tracker_template.html', {'form': form, 'PatientList': patient_list})
 
 # def bootstrap(request):
 
