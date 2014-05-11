@@ -90,7 +90,7 @@ class FlagCondition(models.Model) :
 
 class Patient(models.Model):
 	name = models.CharField('Last, First', max_length=200)
-	dob = models.DateField('Date of Birth')
+	dob = models.DateField(verbose_name='Date of Birth')
 	timeIn = models.DateTimeField('Time In')
 	timeOut = models.DateTimeField('Time Out', null=True, blank=True)
 	last_step = models.ForeignKey(Step, null=True, blank=True, related_name='last_step')

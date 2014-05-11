@@ -1,29 +1,10 @@
 {% for patient in PatientList %}
-<div class="panel panel-default">
-	<div class="panel-heading">
-		<h4 class="panel-title">
-			<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
-				{{ patient.name|upper }}
-			</a>
-			<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
-				{{ patient.dob|date:"M/d/Y" }}
-			</a>
-			<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
-				{{ patient.last_step|upper }}
-			</a>
-			<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
-				{{ patient.current_step|upper }}
-			</a>
-						
-							
-		</h4>
-	</div>
-	<div id="collapseOne" class="panel-collapse collapse" style="height: 0px;">
-		<div class="panel-body">
-			Forms go here.
-		</div>
-	</div>
-</div>
+<p>
+{{ patient.name }}
+{{ patient.dob }}
+{{ patient.last_step }}
+{{ patient.current_step }}
+</p>
 {% endfor %}
 
 <form method="post" action="">{% csrf_token %}

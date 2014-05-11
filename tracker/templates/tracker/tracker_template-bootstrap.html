@@ -15,7 +15,6 @@
 	</head>
 	
 	<body>
-		{% if patientList %}
 		<div class="panel-group" id="accordion">
 			{% for patient in patientList %}
 			<div class="panel panel-default">
@@ -28,10 +27,10 @@
 							{{ patient.dob|date:"M/d/Y" }}
 						</a>
 						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
-							{{ patient.LastStep|upper }}
+							{{ patient.last_step|upper }}
 						</a>
 						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
-							{{ patient.CurrentStep|upper }}
+							{{ patient.current_step|upper }}
 						</a>
 						
 							
@@ -45,7 +44,6 @@
 			</div>
 			{% endfor %}
 		</div>
-		{% endif %}
 
 		<form method="post" action="">
 		{% csrf_token %}
