@@ -47,11 +47,29 @@
 			{% endfor %}
 		</div>
 		{% endif %}
+		
+		{% if form.errors %}
+    			{% for field in form %}
+        			{% for error in field.errors %}
+            				<div class="alert alert-error">
+                				<strong>{{ error|escape }}</strong>
+            				</div>
+        			{% endfor %}
+    			{% endfor %}
+    			{% for error in form.non_field_errors %}
+        			<div class="alert alert-error">
+            			<strong>{{ error|escape }}</strong>
+        			</div>
+    			{% endfor %}
+		{% endif %}
+
 		<form method="post" action="">
 		{% csrf_token %}
 		{{ form }}
-		<input type="submit" value="Submit" />
+		<input type="submit" name="Add Patient" value="Add Patient" />
 		</form>
+
+	
 		
 
 	
