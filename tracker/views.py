@@ -22,9 +22,7 @@ def everything_tracker(request):
             
     form = PatientForm(initial={'timeIn': datetime.now()}) # Blank form to add a new patient
     patient_list = Patient.objects.all()
-    return render(request, 'tracker/tracker_template-bootstrap.html', {'form': form, 'patient_list': patient_list})
-
-# def bootstrap(request):
+    return render(request, 'tracker/CSSTracker.html', {'form': form, 'patient_list': patient_list})
 
 def detail(request, patient_id):
     return HttpResponse("You're looking at patient %s." % patient_id)
