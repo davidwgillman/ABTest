@@ -1,7 +1,7 @@
 {% for patient in PatientList %}
 <p>
-{{ patient.name }}
-{{ patient.dob }}
+{{ patient.name|upper }}
+{{ patient.dob|date:"M/d/Y" }}
 {{ patient.last_step }}
 {{ patient.current_step }}
 </p>

@@ -16,7 +16,7 @@
 	
 	<body>
 		<div class="panel-group" id="accordion">
-			{% for patient in patientList %}
+			{% for patient in PatientList %}
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h4 class="panel-title">
@@ -27,10 +27,10 @@
 							{{ patient.dob|date:"M/d/Y" }}
 						</a>
 						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
-							{{ patient.last_step|upper }}
+							{{ patient.last_step }}
 						</a>
 						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
-							{{ patient.current_step|upper }}
+							{{ patient.current_step }}
 						</a>
 						
 							
