@@ -80,7 +80,7 @@ class FlagCondition(models.Model) :
 	name = models.CharField(max_length=50)
 	stepOutcome = models.ForeignKey(StepOutcome)
 	comparator1 = models.CharField(max_length=2, choices=COMPARATOR_CHOICES)
-	valueToCompare1 = models.CharField(max_length=50)
+	valueToCompare1 = models.CharField(max_length=50, blank=True)
 	comparator2 = models.CharField(max_length=2, blank=True, choices=COMPARATOR_CHOICES)
 	valueToCompare2 = models.CharField(max_length=50, blank=True)
 	level = models.CharField('Warning Level', max_length=50, blank=True, choices=FLAG_LEVEL_CHOICES)
