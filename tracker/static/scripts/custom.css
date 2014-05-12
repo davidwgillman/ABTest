@@ -1,18 +1,24 @@
 #name
 {
-float: left;
+position:relative;
+left:0%;
+text-align:left;
 }
 #status
 {
-float: right;
+position:absolute;
+right:10px;
+text-align:right;
 }
 #DOB
 {
-position:relative;
-left:25%;
+position:absolute;
+left:33%;
+text-align:center;
 }
 #last
 {
-position:relative;
-right:-75%;
+position:absolute;
+right:33%;
+text-align:center;
 }
