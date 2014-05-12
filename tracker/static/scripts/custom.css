@@ -1,0 +1,18 @@
+#name
+{
+float: left;
+}
+#status
+{
+float: right;
+}
+#DOB
+{
+position:relative;
+left:25%;
+}
+#last
+{
+position:relative;
+right:-75%;
+}

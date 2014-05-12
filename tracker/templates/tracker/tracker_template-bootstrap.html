@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+{% load staticfiles %}
+
 <!--[if lt IE 7 ]> <html lang="en" class="no-js ie6 lte-ie8"> <![endif]-->
 <!--[if IE 7 ]> <html lang="en" class="no-js ie7 lte-ie8"> <![endif]-->
 <!--[if IE 8 ]> <html lang="en" class="no-js ie8 lte-ie8"> <![endif]-->
@@ -10,30 +12,30 @@
 		<title>
 			{% block title %}Patient Tracker{% endblock %}
 		</title>
-		<link rel="stylesheet" type="text/css" href="static/bootstrap/css/bootstrap.min.css">
-		<link rel="stylesheet" type="text/css" href="static/bootstrap/css/bootstrap-theme.min.css">
+		<link rel="stylesheet" type="text/css" href="{% static 'scripts/bootstrap/css/bootstrap.min.css' %}">
+		<link rel="stylesheet" type="text/css" href="{% static 'scripts/bootstrap/css/bootstrap-theme.min.css' %}">
+		<link rel="stylesheet" type="text/css" href="{% static 'scripts/custom.css' %}"
 	</head>
 	
 	<body>
+		{% if patient_list %}
 		<div class="panel-group" id="accordion">
-			{% for patient in PatientList %}
+			{% for patient in patient_list %}
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h4 class="panel-title">
-						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed" id="name">
 							{{ patient.name|upper }}
 						</a>
-						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
-							{{ patient.dob|date:"M/d/Y" }}
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed" id="DOB">
+							{{ patient.dob|date:"M d Y" }}
 						</a>
-						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed" id="last">
 							{{ patient.last_step }}
 						</a>
-						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed" id="status">
 							{{ patient.current_step }}
 						</a>
-						
-							
 					</h4>
 				</div>
 				<div id="collapseOne" class="panel-collapse collapse" style="height: 0px;">
@@ -44,7 +46,7 @@
 			</div>
 			{% endfor %}
 		</div>
-
+		{% endif %}
 		<form method="post" action="">
 		{% csrf_token %}
 		{{ form }}
@@ -57,7 +59,7 @@
 	
 	<footer>
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-		<script src="static/bootstrap/js/bootstrap.js"></script>
+		<script src="{% static 'scripts/bootstrap/js/bootstrap.js' %}"></script>
 	</footer>
 
 </html>

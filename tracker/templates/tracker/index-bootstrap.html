@@ -15,9 +15,9 @@
 	</head>
 	
 	<body>
-		{% if patientList %}
+		{% if patient_list %}
 		<div class="panel-group" id="accordion">
-			{% for patient in patientList %}
+			{% for patient in patient_list %}
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h4 class="panel-title">
@@ -29,8 +29,8 @@
 						</a>
 						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
 							{{ patient.LastStep|upper }}
-						<a data-toggle="collapse" data-parent="#accordion"
-							
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="collapsed">
+							{{  patient.Status|upper }}
 					</h4>
 				</div>
 				<div id="collapseOne" class="panel-collapse collapse" style="height: 0px;">
