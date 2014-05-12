@@ -88,6 +88,7 @@ class FlagCondition(models.Model) :
 	def __unicode__(self) :
 		return self.name
 
+
 class Patient(models.Model):
 	name = models.CharField('Last, First', max_length=200)
 	dob = models.DateField(verbose_name='Date of Birth')
@@ -123,5 +124,10 @@ class PatientForm(forms.ModelForm):
     class Meta:
         model = Patient
         fields = ['name', 'dob', 'timeIn']
+        error_messages = {
+                'dob': {
+                        'invalid': "Invalid date. Use format M/D/Y."
+                        }
+                }
 
 
