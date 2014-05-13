@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.core.urlresolvers import reverse
+from django.core.context_processors import csrf
 from django.http import HttpResponse, HttpResponseRedirect
 
 from tracker.models import Step, StepOutcome, NextStepCondition, FlagCondition
@@ -8,7 +9,8 @@ from tracker.models import Patient, PatientStep, PatientOutcome, PatientForm
 from datetime import datetime
 
 def everything_tracker(request):
-    
+    context_dict = {}
+    context_dict.update(csrf(request))
     if request.method == 'POST': # If a form has been submitted.
         if 'Add Patient' in request.POST:
             form = PatientForm(request.POST) # A PatientForm bound to the POST data.
@@ -20,7 +22,7 @@ def everything_tracker(request):
                 #form.save() #This line was making a duplicate patient object. Do we need this line?
                 return HttpResponseRedirect(reverse('everything_tracker')) # Redirect to the same view
             else:
-                print form.errors
+                pass
             
         elif 'SUBMIT_FORM_DATA_DUMMY_VAR' in request.POST:
             pass #This is where we can handle other buttons being pressed.
@@ -29,7 +31,9 @@ def everything_tracker(request):
         form = PatientForm(initial={'timeIn': datetime.now()}) # Blank form to add a new patient
             
     patient_list = Patient.objects.all()
-    return render(request, 'tracker/CSSTracker.html', {'form': form, 'patient_list': patient_list})
+    context_dict['form'] = form
+    context_dict['patient_list'] = patient_list
+    return render(request, 'tracker/CSSTracker.html', context_dict)
 
 def detail(request, patient_id):
     return HttpResponse("You're looking at patient %s." % patient_id)

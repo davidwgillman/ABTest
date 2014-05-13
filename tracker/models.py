@@ -120,7 +120,6 @@ class PatientOutcome(models.Model):
 # Add PatientFlag class
 
 class PatientForm(forms.ModelForm):
-    #timeIn = forms.DateTimeField(initial=datetime.now)
     class Meta:
         model = Patient
         fields = ['name', 'dob', 'timeIn']

@@ -63,9 +63,13 @@
     			{% endfor %}
 		{% endif %}
 
+
 		<form method="post" action="">
 		{% csrf_token %}
-		{{ form }}
+		{% for field in form %}
+			<tr><th> {{ field.label_tag }} {{ field }} </td></tr>
+		{% endfor %}
+		
 		<input type="submit" name="Add Patient" value="Add Patient" />
 		</form>
 
