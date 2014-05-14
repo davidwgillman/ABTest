@@ -37,8 +37,8 @@ def everything_tracker(request):
     else:
         form = PatientForm(initial={'timeIn': timezone.now()}) # Blank form to add a new patient
             
-    
-    patient_objects = Patient.objects.all()
+    # Can order these patients in ascending or descending order of arrival    
+    patient_objects = Patient.objects.all().order_by('-timeIn')
     patient_list = []
     for p in patient_objects:
         try:
