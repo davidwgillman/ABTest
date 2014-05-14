@@ -45,11 +45,19 @@ def everything_tracker(request):
             last_step = p.patientstep_set.get(last=True)
         except PatientStep.DoesNotExist:
             last_step = None
+        except PatientStep.MultipleObjectsReturned:
+            last_step = None
+            #Raise some error that doesn't crash everything?
+            
         try:
             current_step = p.patientstep_set.get(current=True)
         except PatientStep.DoesNotExist:
-            #Could raise an error here, or just display None as well. Either way this shouldn't happen.
+            #Could raise an error here, or just display None as well.
+            #Either way this shouldn't happen.
             current_step = None
+        except PatientStep.MultipleObjectsReturned:
+            current_step = None
+            # What do we want to do here?
             
         t = (p, last_step, current_step)
         patient_list.append(t)
