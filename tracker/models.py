@@ -94,20 +94,23 @@ class Patient(models.Model):
 	dob = models.DateField(verbose_name='Date of Birth')
 	timeIn = models.DateTimeField('Time In')
 	timeOut = models.DateTimeField('Time Out', null=True, blank=True)
-	last_step = models.ForeignKey(Step, null=True, blank=True, related_name='last_step')
-	current_step = models.ForeignKey(Step, null=True, blank=True, related_name='current_step')
 
 	def __unicode__(self) :
 		return self.name + ' -- DOB ' + self.dob.strftime('%Y-%m-%d')
 
+	
 class PatientStep(models.Model):
+        last = models.BooleanField(default=False)
+        current = models.BooleanField(default=False)
 	step = models.ForeignKey(Step)
 	patient = models.ForeignKey(Patient)
-	start = models.DateTimeField('Start Time', null=True, blank=True)
+	start = models.DateTimeField('Start Time', null=False, blank=False)
 	end = models.DateTimeField('End Time', null=True, blank=True)
 
 	def __unicode__(self) :
-		return unicode(self.patient) + ' -- ' +  unicode(self.step)
+                return unicode(self.step)
+	
+
 
 class PatientOutcome(models.Model):
 	patientStep = models.ForeignKey(PatientStep)
