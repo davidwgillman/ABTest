@@ -91,23 +91,26 @@ class FlagCondition(models.Model) :
 
 class Patient(models.Model):
 	name = models.CharField('Last, First', max_length=200)
-	dob = models.DateField(verbose_name='Date of Birth')
+	dob = models.DateField(verbose_name='Date of Birth (M/D/Y)')
 	timeIn = models.DateTimeField('Time In')
 	timeOut = models.DateTimeField('Time Out', null=True, blank=True)
-	last_step = models.ForeignKey(Step, null=True, blank=True, related_name='last_step')
-	current_step = models.ForeignKey(Step, null=True, blank=True, related_name='current_step')
 
 	def __unicode__(self) :
 		return self.name + ' -- DOB ' + self.dob.strftime('%Y-%m-%d')
 
+	
 class PatientStep(models.Model):
+        last = models.BooleanField(default=False)
+        current = models.BooleanField(default=False)
 	step = models.ForeignKey(Step)
 	patient = models.ForeignKey(Patient)
-	start = models.DateTimeField('Start Time', null=True, blank=True)
+	start = models.DateTimeField('Start Time', null=False, blank=False)
 	end = models.DateTimeField('End Time', null=True, blank=True)
 
 	def __unicode__(self) :
-		return unicode(self.patient) + ' -- ' +  unicode(self.step)
+                return unicode(self.step)
+	
+
 
 class PatientOutcome(models.Model):
 	patientStep = models.ForeignKey(PatientStep)
@@ -125,7 +128,7 @@ class PatientForm(forms.ModelForm):
         fields = ['name', 'dob', 'timeIn']
         error_messages = {
                 'dob': {
-                        'invalid': "Invalid date. Use format M/D/Y."
+                        'invalid': "Invalid date. Please use format M/D/Y."
                         }
                 }
 
