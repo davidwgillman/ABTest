@@ -3,6 +3,7 @@ from django import forms
 from datetime import datetime
 
 from django.core import urlresolvers
+from django.core.exceptions import ValidationError
 
 class Step(models.Model) :
 	name = models.CharField(max_length=50)
@@ -103,7 +104,7 @@ class Patient(models.Model):
 	def __unicode__(self) :
 		return self.name + ' -- DOB ' + self.dob.strftime('%Y-%m-%d')
 
-	
+
 class PatientStep(models.Model):
         last = models.BooleanField(default=False)
         current = models.BooleanField(default=False)
@@ -111,23 +112,40 @@ class PatientStep(models.Model):
 	step = models.ForeignKey(Step)
 	start = models.DateTimeField('Start Time', null=True, blank=True)
 	end = models.DateTimeField('End Time', null=True, blank=True)
+        '''
+        def clean(self, *args, **kwargs):
+                if self.last and self.current:
+                        raise ValidationError(("Only one of these can be true."))
+                super(PatientStep, self).clean(*args, **kwargs)
+
+        def full_clean(self, *args, **kwargs):
+                return self.clean(*args, **kwargs)
+        '''
+	def save(self, *args, **kwargs):
+                #self.full_clean()
+                if self.last and self.current:
+                        self.last = False
+                        self.current = False
+                        
+                elif self.last:
+                        PatientStep.objects.filter(last=True).update(
+                                        last=False)
+                        
+                elif self.current:
+                        
+                        Q =PatientStep.objects.filter(current=True)
+                        count = Q.count()
+                        
+                        if count == 1:
+                                Q.update(current=False, last=True)
+                        elif count > 1:
+                                Q.update(current=False)
+                        
+                
+                super(PatientStep, self).save(*args, **kwargs)
 
         def __unicode__(self) :
                 return unicode(self.step)
-        '''
-	def changeform_link(self):
-                if self.id:
-                        changeform_url = urlresolvers.reverse(
-                                'admin:tracker_patientstep_change',
-                                args=(self.id,) )
-                        return u'<a href="%s" target="_blank">Outcome</a>' % changeform_url
-                else:
-                        return u''
-                
-
-        changeform_link.allow_tags = True
-        changeform_link.short_description = '' #omits column header
-        '''
 
         class Meta:
                 ordering = ['patient__name']
@@ -136,7 +154,7 @@ class PatientStep(models.Model):
 
 class PatientOutcome(models.Model):
 	patient = models.ForeignKey(Patient)
-	stepOutcome = models.OneToOneField(StepOutcome)
+	stepOutcome = models.ForeignKey(StepOutcome)
 	
 	value = models.CharField('Outcome Value', max_length=50)
 

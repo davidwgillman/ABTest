@@ -18,7 +18,6 @@
 	</head>
 	
 	<body>
-		{% if patient_list %}
 		<div class="panel-group" id="accordion">
 			{% for patient, last_step, current_step in patient_list %}
 			<div class="panel panel-default">
@@ -44,19 +43,21 @@
 					</div>
 				</div>
 			</div>
+			{% empty %}
+				<label> No patients as of now. </label> <!--Asher make this look pretty <3-->
 			{% endfor %}
 		</div>
-		{% endif %}
+
 		
-		{% if form.errors %}
-    			{% for field in form %}
+		{% if AddPatientform.errors %}
+    			{% for field in AddPatientform %}
         			{% for error in field.errors %}
             				<div class="alert alert-error">
                 				<strong>{{ error|escape }}</strong>
             				</div>
         			{% endfor %}
     			{% endfor %}
-    			{% for error in form.non_field_errors %}
+    			{% for error in AddPatientform.non_field_errors %}
         			<div class="alert alert-error">
             			<strong>{{ error|escape }}</strong>
         			</div>
@@ -66,7 +67,7 @@
 
 		<form method="post" action="">
 		{% csrf_token %}
-		{% for field in form %}
+		{% for field in AddPatientform %}
 			<tr><th> {{ field.label_tag }} {{ field }} </td></tr>
 		{% endfor %}
 		
