@@ -43,15 +43,41 @@ admin.site.register(Step, StepAdmin)
 #admin.site.register(NextStepCondition)
 admin.site.register(FlagCondition)
 
+class PatientOutcomeInline(admin.StackedInline):
+        model = PatientOutcome
+        max_num = 1
+
+class PatientStepAdmin(admin.ModelAdmin):
+        inlines = [PatientOutcomeInline,]
+        #list_display = ('patient', 'step')
+        
+admin.site.register(PatientStep, PatientStepAdmin)
+
+class PatientStepLinkInline(admin.StackedInline):
+        model = PatientStep
+        fields = (('last', 'current'), 'step', 'changeform_link', 'start', 'end')
+        readonly_fields = ('changeform_link',)
+
+class PatientAdmin(admin.ModelAdmin):
+        #date_hierarchy = 'timeIn'
+        inlines = [PatientStepLinkInline,]
+        fields = (('name', 'dob'),('timeIn', 'timeOut'))
+
+admin.site.register(Patient, PatientAdmin)
+
+
+'''
 class PatientStepInline(admin.StackedInline) :
 	model = PatientStep
 	extra = 0
 
+
 class PatientAdmin(admin.ModelAdmin) :
-	inlines = [PatientStepInline]
+        #date_hierarchy = 'timeIn'
+	inlines = [PatientStepInline,]
 	fields = (('name', 'dob'),('timeIn', 'timeOut')) 
 
 admin.site.register(Patient, PatientAdmin)
 #admin.site.register(PatientStep)
 admin.site.register(PatientOutcome)
-
+'''

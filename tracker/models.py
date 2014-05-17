@@ -2,6 +2,8 @@ from django.db import models
 from django import forms
 from datetime import datetime
 
+from django.core import urlresolvers
+
 class Step(models.Model) :
 	name = models.CharField(max_length=50)
 	number = models.IntegerField(default=1)
@@ -46,6 +48,8 @@ COMPARATOR_CHOICES = (
         (FALSE, 'False')
 )
 
+
+	
 class NextStepCondition(models.Model) :
 	step = models.ForeignKey(Step, related_name='step')
 
@@ -66,10 +70,11 @@ class NextStepCondition(models.Model) :
 
 	# Need to figure out how to use this. Having trouble here. I want this called each time a
 	# NextStepCondition object is made.
-	def get_default_priority(step):
-	        List_of_previous_objects = NextStepCondition.objects.filter(step__name=step)
-	        default_priority = List_of_previous_objects.count() + 1
-	        return default_priority
+	def get_default_priority(st):
+                List_of_previous_objects = NextStepCondition.objects.filter(step__name=st)
+                default_priority = List_of_previous_objects.count() + 1
+                return default_priority
+	
 
 FLAG_LEVEL_CHOICES = (
 	('1', 'Warning'),
@@ -91,7 +96,7 @@ class FlagCondition(models.Model) :
 
 class Patient(models.Model):
 	name = models.CharField('Last, First', max_length=200)
-	dob = models.DateField(verbose_name='Date of Birth (M/D/Y)')
+	dob = models.DateField(verbose_name='Date of Birth')
 	timeIn = models.DateTimeField('Time In')
 	timeOut = models.DateTimeField('Time Out', null=True, blank=True)
 
@@ -102,23 +107,40 @@ class Patient(models.Model):
 class PatientStep(models.Model):
         last = models.BooleanField(default=False)
         current = models.BooleanField(default=False)
+        patient = models.ForeignKey(Patient)
 	step = models.ForeignKey(Step)
-	patient = models.ForeignKey(Patient)
-	start = models.DateTimeField('Start Time', null=False, blank=False)
+	start = models.DateTimeField('Start Time', null=True, blank=True)
 	end = models.DateTimeField('End Time', null=True, blank=True)
 
-	def __unicode__(self) :
-                return unicode(self.step)
-	
+        def __unicode__(self) :
+                return unicode(self.patient) + ' -- ' + unicode(self.step)
+        
+	def changeform_link(self):
+                if self.id:
+                        changeform_url = urlresolvers.reverse(
+                                'admin:tracker_patientstep_change',
+                                args=(self.id,) )
+                        return u'<a href="%s" target="_blank">Outcome</a>' % changeform_url
+                else:
+                        return u''
+
+        changeform_link.allow_tags = True
+        changeform_link.short_description = '' #omits column header
+
+        class Meta:
+                ordering = ['patient__name']
+
 
 
 class PatientOutcome(models.Model):
 	patientStep = models.ForeignKey(PatientStep)
-	name = models.CharField('Outcome Name', max_length=50)
+	
+	#name = models.CharField('Outcome Name', max_length=50)
 	value = models.CharField('Outcome Value', max_length=50)
 
+
 	def __unicode__(self) :
-		return unicode(self.patientStep) + ' -- ' + self.name
+		return unicode(self.patientStep)
 
 # Add PatientFlag class
 
@@ -128,7 +150,7 @@ class PatientForm(forms.ModelForm):
         fields = ['name', 'dob', 'timeIn']
         error_messages = {
                 'dob': {
-                        'invalid': "Invalid date. Please use format M/D/Y."
+                        'invalid': "Invalid date. Use format M/D/Y."
                         }
                 }
 

@@ -20,21 +20,21 @@
 	<body>
 		{% if patient_list %}
 		<div class="panel-group" id="accordion">
-			{% for patient_t in patient_list %}
+			{% for patient, last_step, current_step in patient_list %}
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h4 class="panel-title">
 						<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="name">
-							{{ patient_t.0.name|upper }}
+							{{ patient.name|upper }}
 						</a>
 						<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="DOB">
-							{{ patient_t.0.dob|date:"M d Y" }}
+							{{ patient.dob|date:"M d Y" }}
 						</a>
 						<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="last">
-							{{ patient_t.1 }}
+							{{ last_step.step }}
 						</a>
 						<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="status">
-							{{ patient_t.2 }}
+							{{ current_step.step }}
 						</a>
 					</h4>
 				</div>
