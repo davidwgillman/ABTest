@@ -113,8 +113,8 @@ class PatientStep(models.Model):
 	end = models.DateTimeField('End Time', null=True, blank=True)
 
         def __unicode__(self) :
-                return unicode(self.patient) + ' -- ' + unicode(self.step)
-        
+                return unicode(self.step)
+        '''
 	def changeform_link(self):
                 if self.id:
                         changeform_url = urlresolvers.reverse(
@@ -123,9 +123,11 @@ class PatientStep(models.Model):
                         return u'<a href="%s" target="_blank">Outcome</a>' % changeform_url
                 else:
                         return u''
+                
 
         changeform_link.allow_tags = True
         changeform_link.short_description = '' #omits column header
+        '''
 
         class Meta:
                 ordering = ['patient__name']
@@ -133,14 +135,14 @@ class PatientStep(models.Model):
 
 
 class PatientOutcome(models.Model):
-	patientStep = models.ForeignKey(PatientStep)
+	patient = models.ForeignKey(Patient)
+	stepOutcome = models.OneToOneField(StepOutcome)
 	
-	#name = models.CharField('Outcome Name', max_length=50)
 	value = models.CharField('Outcome Value', max_length=50)
 
 
 	def __unicode__(self) :
-		return unicode(self.patientStep)
+		return unicode(self.stepOutcome)
 
 # Add PatientFlag class
 

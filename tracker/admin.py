@@ -43,6 +43,7 @@ admin.site.register(Step, StepAdmin)
 #admin.site.register(NextStepCondition)
 admin.site.register(FlagCondition)
 
+'''
 class PatientOutcomeInline(admin.StackedInline):
         model = PatientOutcome
         max_num = 1
@@ -71,13 +72,18 @@ class PatientStepInline(admin.StackedInline) :
 	model = PatientStep
 	extra = 0
 
+class PatientOutcomeInline(admin.StackedInline) :
+        model = PatientOutcome
+        fk_name = 'patient'
+        extra = 0
+
 
 class PatientAdmin(admin.ModelAdmin) :
         #date_hierarchy = 'timeIn'
-	inlines = [PatientStepInline,]
+	inlines = [PatientStepInline, PatientOutcomeInline]
 	fields = (('name', 'dob'),('timeIn', 'timeOut')) 
 
 admin.site.register(Patient, PatientAdmin)
 #admin.site.register(PatientStep)
 admin.site.register(PatientOutcome)
-'''
+
