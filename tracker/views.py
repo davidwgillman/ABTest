@@ -89,7 +89,6 @@ def everything_tracker(request):
                             elif next_step_condition.dependsOnOutcome:
                                 conditional_outcome = next_step_condition.conditionalOutcome
                                 PO = p.patientoutcome_set.get(stepOutcome=conditional_outcome)
-                                #PatientOutcome.objects.get(stepOutcome=conditional_outcome, patient=p)
                                 cmp1 = next_step_condition.comparator1
                                 value1 = next_step_condition.valueToCompare1
                                 cmp2 = next_step_condition.comparator2
@@ -132,7 +131,7 @@ def everything_tracker(request):
                             
                         return HttpResponseRedirect(reverse('everything_tracker'))
                     else:
-                        break                                                           
+                        break #Let the invalid formset go through. Although it won't really display any errors..                                                      
         
     else:
         pass
