@@ -225,7 +225,18 @@ class BasePatientOutcomeFormSet(BaseFormSet):
                 form.fields['patient'] = forms.ModelChoiceField(queryset=Patient.objects.all(),
                                          widget=forms.HiddenInput())
 '''
-# Add PatientFlag class
+
+class PatientFlag (models.Model):
+        name = models.CharField('Outcome Name', max_length=50)
+        comparator1 = models.CharField(max_length=2, choices=COMPARATOR_CHOICES)
+	valueToCompare1 = models.CharField(max_length=50, blank=True)
+	comparator2 = models.CharField(max_length=2, blank=True, choices=COMPARATOR_CHOICES)
+	valueToCompare2 = models.CharField(max_length=50, blank=True)
+        level = models.CharField('Warning Level', max_length=50, blank=True, choices=FLAG_LEVEL_CHOICES)
+	stepOutcome = models.ForeignKey(StepOutcome)
+
+        def __unicode__(self) :
+                return unicode(self.flag)
 
 class PatientForm(forms.ModelForm):
 
