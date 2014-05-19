@@ -4,6 +4,7 @@ from datetime import datetime
 
 from django.core import urlresolvers
 from django.core.exceptions import ValidationError
+from django.forms.formsets import BaseFormSet
 
 class Step(models.Model) :
 	name = models.CharField(max_length=50)
@@ -16,21 +17,23 @@ class Step(models.Model) :
 		ordering = ['number']
 
 
+BOOLEAN_LABEL = 'True/False'
+FLOAT_LABEL = 'Number'
 
 class StepOutcome(models.Model) :
-        BOOLEAN = 'boolean'
-        FLOAT = 'float'
         VALUE_TYPES = (
-        (BOOLEAN, 'True/False'),
-        (FLOAT, 'Number')
+        (BOOLEAN_LABEL, BOOLEAN_LABEL),
+        (FLOAT_LABEL, FLOAT_LABEL)
 )
         
 	step = models.ForeignKey(Step)
 	name = models.CharField(max_length=50)
-	valueType = models.CharField(max_length=50, blank=True, choices=VALUE_TYPES)
+	valueType = models.CharField(max_length=50, blank=False, null=False,
+                                     choices=VALUE_TYPES)
 
 	def __unicode__(self) :
 		return unicode(self.name) #+ " Outcome"
+
 
 
 
@@ -66,15 +69,13 @@ class NextStepCondition(models.Model) :
 	valueToCompare2 = models.CharField('Value2', max_length=50, blank=True)
 	nextStep = models.ForeignKey(Step, related_name='nextStep')
 
+        def save(self, *args, **kwargs):
+                self.priority = NextStepCondition.objects.filter(step=self.step).count()+1
+                super(NextStepCondition, self).save(*args, **kwargs)
+                
+                
 	def __unicode__(self) :
 		return unicode(self.step) 
-
-	# Need to figure out how to use this. Having trouble here. I want this called each time a
-	# NextStepCondition object is made.
-	def get_default_priority(st):
-                List_of_previous_objects = NextStepCondition.objects.filter(step__name=st)
-                default_priority = List_of_previous_objects.count() + 1
-                return default_priority
 	
 
 FLAG_LEVEL_CHOICES = (
@@ -101,6 +102,7 @@ class Patient(models.Model):
 	timeIn = models.DateTimeField('Time In')
 	timeOut = models.DateTimeField('Time Out', null=True, blank=True)
 
+
 	def __unicode__(self) :
 		return self.name + ' -- DOB ' + self.dob.strftime('%Y-%m-%d')
 
@@ -112,34 +114,42 @@ class PatientStep(models.Model):
 	step = models.ForeignKey(Step)
 	start = models.DateTimeField('Start Time', null=True, blank=True)
 	end = models.DateTimeField('End Time', null=True, blank=True)
-        '''
-        def clean(self, *args, **kwargs):
-                if self.last and self.current:
-                        raise ValidationError(("Only one of these can be true."))
-                super(PatientStep, self).clean(*args, **kwargs)
 
-        def full_clean(self, *args, **kwargs):
-                return self.clean(*args, **kwargs)
-        '''
-	def save(self, *args, **kwargs):
-                #self.full_clean()
+        def clean(self, *args, **kwargs):
+                '''
+                This can check if both Last and Current boolean fields have been checked.
+                If that happens, that's definitely an error. But at the time of this
+                cleaning, not all the other model changes are inputted yet. Thus, if
+                a nurse changes a patient's double-last setup so that the second
+                Patient Step down the list is changed to current; that's a perfectly
+                valid change logically, but if we tried to check the "last" boolean
+                status of other patient steps for this patient, the first Patient
+                Step would get called here and would return a ValidationError,
+                because the change in the boolean field for the second step hasn't
+                been saved yet. All of that to say -- any validating to ensure
+                that no patient has more than one patient step with a last or
+                current boolean field check-marked, must take place at the
+                formset level. But for the Admin page, that's within the Admin's
+                automatic formset, which I don't have access to unless I make a
+                custom Admin. Which I'd rather not. So what I've done, is overriden
+                the save method to set all other boolean fields of the same type
+                being checked, to False, which hopefully the nurse was doing anyway.
+                It might confuse a nurse if they don't realize why their change
+                made a previous Last button become unchecked, as this doesn't show
+                any error messages, which is less than ideal, but it works for now.
+                -NJ
+                '''
                 if self.last and self.current:
-                        self.last = False
-                        self.current = False
-                        
-                elif self.last:
-                        PatientStep.objects.filter(last=True).update(
-                                        last=False)
+                        raise ValidationError(("Only one of these can be true!"))
+                super(PatientStep, self).clean(*args, **kwargs)
+                
+	def save(self, *args, **kwargs):            
+                if self.last:
+                        PatientStep.objects.filter(last=True, patient=self.patient).update(last=False)
                         
                 elif self.current:
-                        
-                        Q =PatientStep.objects.filter(current=True)
-                        count = Q.count()
-                        
-                        if count == 1:
-                                Q.update(current=False, last=True)
-                        elif count > 1:
-                                Q.update(current=False)
+                        PatientStep.objects.filter(current=True,
+                                                   patient=self.patient).update(current=False)
                         
                 
                 super(PatientStep, self).save(*args, **kwargs)
@@ -148,7 +158,7 @@ class PatientStep(models.Model):
                 return unicode(self.step)
 
         class Meta:
-                ordering = ['patient__name']
+                ordering = ['step__name']
 
 
 
@@ -156,22 +166,93 @@ class PatientOutcome(models.Model):
 	patient = models.ForeignKey(Patient)
 	stepOutcome = models.ForeignKey(StepOutcome)
 	
-	value = models.CharField('Outcome Value', max_length=50)
+	value = models.CharField(verbose_name=unicode(stepOutcome), max_length=50)
 
 
 	def __unicode__(self) :
 		return unicode(self.stepOutcome)
 
+BOOLEAN_CHOICES = (
+        (TRUE, 'True'),
+        (FALSE, 'False'),
+        )
+class PatientOutcomeForm(forms.Form) :
+        patient = forms.ModelChoiceField(queryset=Patient.objects.all(),
+                                         widget=forms.HiddenInput())
+        stepOutcome = forms.ModelChoiceField(queryset=StepOutcome.objects.all(),
+                                        widget=forms.HiddenInput())
+        value = forms.CharField(label='Value', max_length=50)
+        
+
+        def clean(self): #Validate that the value inputted matches up with the ValueType.
+                cleaned_data = super(PatientOutcomeForm, self).clean()
+                value = cleaned_data.get('value')
+                value_type = cleaned_data.get('stepOutcome').valueType
+                if value_type == BOOLEAN_LABEL:
+                        if value != "True" and value != "true" and value != "False" and value != "false":
+                                raise forms.ValidationError(
+                                        _('Data for this outcome must be %(v_t)s'),
+                                                code="Wrong data type",
+                                                params={'v_t': BOOLEAN_LABEL},
+                                                )
+                elif value_type == FLOAT_LABEL:
+                        try:
+                                float(value)
+                        except ValueError:
+                                raise forms.ValidationError(
+                                        _('Data for this outcome must be a %(v_t)s'),
+                                                code="Wrong data type",
+                                                params={'v_t': FLOAT_LABEL},
+                                                )
+                return cleaned_data
+    
+        def __init__(self, *args, **kwargs):
+                super(PatientOutcomeForm, self).__init__(*args, **kwargs)
+                
+                s_o = self.initial.get('stepOutcome')
+                if s_o:
+                        if s_o.valueType == BOOLEAN_LABEL:
+                                self.fields['value'] = forms.ChoiceField(choices=BOOLEAN_CHOICES)
+
+                        self.fields['value'].label = unicode(s_o)
+                        
+                
+
+'''
+class BasePatientOutcomeFormSet(BaseFormSet):
+        def add_fields(self, form, index):
+                super(BasePatientOutcomeFormSet, self).add_fields(form, index)
+                form.fields['patient'] = forms.ModelChoiceField(queryset=Patient.objects.all(),
+                                         widget=forms.HiddenInput())
+'''
 # Add PatientFlag class
 
 class PatientForm(forms.ModelForm):
-    class Meta:
-        model = Patient
-        fields = ['name', 'dob', 'timeIn']
-        error_messages = {
-                'dob': {
-                        'invalid': "Invalid date. Use format M/D/Y."
+
+        
+        class Meta:
+                model = Patient
+                fields = ['name', 'dob', 'timeIn']
+                error_messages = {
+                        'dob': {
+                                'invalid': "Invalid date. Use format M/D/Y."
+                                }
                         }
-                }
+
+        def clean(self):
+                cleaned_data = super(PatientForm, self).clean()
+                name = cleaned_data.get('name')
+                dob = cleaned_data.get('dob')
+
+                patients = Patient.objects.all()
+                for patient in patients:
+                        if patient.name == name and patient.dob == dob:
+                                raise forms.ValidationError(
+                                        _('A patient with this name and D.O.B. already exists.')
+                                        )
+                return cleaned_data
+                        
+                
+
 
 
