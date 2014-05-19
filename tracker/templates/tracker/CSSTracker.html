@@ -39,6 +39,10 @@
 						<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="status">
 							{{ current_step.step }}
 						</a>
+						<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="flag">
+							{{ patient.flag }}
+						</a>
+
 					</h4>
 				</div>
 				<div id="collapse{{ forloop.counter }}" class="panel-collapse collapse" style="height: 0px;">
