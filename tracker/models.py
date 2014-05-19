@@ -57,7 +57,6 @@ COMPARATOR_CHOICES = (
 class NextStepCondition(models.Model) :
 	step = models.ForeignKey(Step, related_name='step')
 
-	# Use that number plus one, for the default priority when a new condition is made in the admin page.
 	priority = models.IntegerField(default=1) # conditions are evaluated in order
 	dependsOnStepNotDone = models.BooleanField(default=False)
 	stepNotDone = models.ForeignKey(Step, null=True, blank=True, related_name='stepNotDone')
@@ -69,10 +68,40 @@ class NextStepCondition(models.Model) :
 	valueToCompare2 = models.CharField('Value2', max_length=50, blank=True)
 	nextStep = models.ForeignKey(Step, related_name='nextStep')
 
-        def save(self, *args, **kwargs):
-                self.priority = NextStepCondition.objects.filter(step=self.step).count()+1
-                super(NextStepCondition, self).save(*args, **kwargs)
+        def clean(self, *args, **kwargs):
+                if not self.nextStep:
+                        raise ValidationError(
+                                ("Enter the next step for the patient to go to."))
+                elif not self.comparator1 == TRUE and not self.comparator1 == FALSE and self.valueToCompare1 == '':
+                        raise ValidationError(
+                                ("Fill in Value1."))
+                elif self.comparator2 and not self.comparator1:
+                        raise ValidationError(
+                                ("Fill in the first comparator before the second."))
+                elif not self.comparator2 == TRUE and not self.comparator2 == FALSE and self.valueToCompare2 == '':
+                        raise ValidationError(
+                                ("Fill in Value2."))
+                elif not self.dependsOnStepNotDone and not self.dependsOnOutcome:
+                        raise ValidationError(
+                                ("A next step condition must depend on either a step not being done, or an outcome value."))
+                elif self.dependsOnStepNotDone and self.dependsOnOutcome:
+                        raise ValidationError(
+                                ("A next step condition may depend on either a step not being done, or an outcome value. Not both."))
+                elif self.dependsOnStepNotDone:
+                        if not self.stepNotDone:
+                                raise ValidationError(
+                                ("Enter the step not done."))
+                elif self.dependsOnOutcome:
+                        if not self.conditionalOutcome:
+                                raise ValidationError(
+                                ("Enter the outcome to be tested."))
+
+                        
+                super(NextStepCondition, self).clean(*args, **kwargs)
                 
+        def __init__(self, *args, **kwargs):
+                super(NextStepCondition, self).__init__(*args, **kwargs)
+                #self.priority = NextStepCondition.objects.filter(step=self.step).count()+1 #Not working yet..
                 
 	def __unicode__(self) :
 		return unicode(self.step) 
@@ -166,7 +195,7 @@ class PatientOutcome(models.Model):
 	patient = models.ForeignKey(Patient)
 	stepOutcome = models.ForeignKey(StepOutcome)
 	
-	value = models.CharField(verbose_name=unicode(stepOutcome), max_length=50)
+	value = models.CharField(max_length=50)
 
 
 	def __unicode__(self) :
@@ -189,9 +218,9 @@ class PatientOutcomeForm(forms.Form) :
                 value = cleaned_data.get('value')
                 value_type = cleaned_data.get('stepOutcome').valueType
                 if value_type == BOOLEAN_LABEL:
-                        if value != "True" and value != "true" and value != "False" and value != "false":
+                        if value != TRUE and value != FALSE:
                                 raise forms.ValidationError(
-                                        _('Data for this outcome must be %(v_t)s'),
+                                        ('Data for this outcome must be %(v_t)s'),
                                                 code="Wrong data type",
                                                 params={'v_t': BOOLEAN_LABEL},
                                                 )
@@ -200,7 +229,7 @@ class PatientOutcomeForm(forms.Form) :
                                 float(value)
                         except ValueError:
                                 raise forms.ValidationError(
-                                        _('Data for this outcome must be a %(v_t)s'),
+                                        ('Data for this outcome must be a %(v_t)s'),
                                                 code="Wrong data type",
                                                 params={'v_t': FLOAT_LABEL},
                                                 )
