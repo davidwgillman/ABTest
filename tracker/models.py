@@ -55,7 +55,7 @@ COMPARATOR_CHOICES = (
 
 	
 class NextStepCondition(models.Model) :
-	step = models.ForeignKey(Step, related_name='step')
+	step = models.ForeignKey(Step, related_name='nextstepcondition_set')
 
 	priority = models.IntegerField(default=1) # conditions are evaluated in order
 	dependsOnStepNotDone = models.BooleanField(default=False)
@@ -69,21 +69,15 @@ class NextStepCondition(models.Model) :
 	nextStep = models.ForeignKey(Step, related_name='nextStep')
 
         def clean(self, *args, **kwargs):
-                if not self.nextStep:
-                        raise ValidationError(
-                                ("Enter the next step for the patient to go to."))
-                elif not self.comparator1 == TRUE and not self.comparator1 == FALSE and self.valueToCompare1 == '':
+                if self.comparator1 and self.comparator1 != TRUE and self.comparator1 != FALSE and self.valueToCompare1 == '':
                         raise ValidationError(
                                 ("Fill in Value1."))
                 elif self.comparator2 and not self.comparator1:
                         raise ValidationError(
                                 ("Fill in the first comparator before the second."))
-                elif not self.comparator2 == TRUE and not self.comparator2 == FALSE and self.valueToCompare2 == '':
+                elif self.comparator2 and self.comparator2 != TRUE and self.comparator2 != FALSE and self.valueToCompare2 == '':
                         raise ValidationError(
                                 ("Fill in Value2."))
-                elif not self.dependsOnStepNotDone and not self.dependsOnOutcome:
-                        raise ValidationError(
-                                ("A next step condition must depend on either a step not being done, or an outcome value."))
                 elif self.dependsOnStepNotDone and self.dependsOnOutcome:
                         raise ValidationError(
                                 ("A next step condition may depend on either a step not being done, or an outcome value. Not both."))
@@ -256,16 +250,16 @@ class BasePatientOutcomeFormSet(BaseFormSet):
 '''
 
 class PatientFlag (models.Model):
-        name = models.CharField('Outcome Name', max_length=50)
+        stepOutcome = models.ForeignKey(StepOutcome)
         comparator1 = models.CharField(max_length=2, choices=COMPARATOR_CHOICES)
 	valueToCompare1 = models.CharField(max_length=50, blank=True)
 	comparator2 = models.CharField(max_length=2, blank=True, choices=COMPARATOR_CHOICES)
 	valueToCompare2 = models.CharField(max_length=50, blank=True)
         level = models.CharField('Warning Level', max_length=50, blank=True, choices=FLAG_LEVEL_CHOICES)
-	stepOutcome = models.ForeignKey(StepOutcome)
+	name = models.CharField('Outcome Name', max_length=50)
 
         def __unicode__(self) :
-                return unicode(self.flag)
+                return unicode(self.name)
 
 class PatientForm(forms.ModelForm):
 
@@ -292,7 +286,10 @@ class PatientForm(forms.ModelForm):
                                         )
                 return cleaned_data
                         
-                
+'''                
+class DeletePatientForm(forms.ModelForm):
+        class Meta:
+                model = Patient
+                fields = []
 
-
-
+'''    

@@ -62,26 +62,34 @@ def everything_tracker(request):
                     formset = PatientOutcomeFormSet(request.POST, prefix=unicode(p.pk))
                     if formset.is_valid():
                         for form in formset.forms:
-                            print 'yoyoyo'
-                            new_PO = PatientOutcome.objects.create(patient=form.cleaned_data['patient'],
+                            if not PatientOutcome.objects.filter(patient=form.cleaned_data['patient'],
+                                                               stepOutcome=form.cleaned_data['stepOutcome']
+                                                                 ).exists() :
+                                new_PO = PatientOutcome.objects.create(patient=form.cleaned_data['patient'],
                                                                stepOutcome=form.cleaned_data['stepOutcome'],
                                                                value=form.cleaned_data['value']
                                                                )
                         current_step = p.patientstep_set.get(current=True)
+                        if current_step.step == Step.objects.order_by('-number')[0]:
+                            # Maybe need to save the patient object to permanent records here?
+                            # Just need to remove the patient from the display...
+                            p.delete()
+                            break
                         next_step_conditions = current_step.step.nextstepcondition_set.all().order_by('priority')
-                        #next_step_conditions = NextStepCondition.objects.filter(step=current_step).order_by('priority')
                         next_step = None
                         for next_step_condition in next_step_conditions:
                             if next_step_condition.dependsOnStepNotDone:
                                 step_not_done = next_step_condition.stepNotDone
-                                done = p.patientstep_set.get(step=step_not_done)
-                                if not done:
+                                try:
+                                    done = p.patientstep_set.get(step=step_not_done)
+                                except PatientStep.DoesNotExist:
                                     next_step = next_step_condition.nextStep
                                     break
                                 
                             elif next_step_condition.dependsOnOutcome:
                                 conditional_outcome = next_step_condition.conditionalOutcome
-                                PO = PatientOutcome.objects.get(stepOutcome=conditional_outcome)
+                                PO = p.patientoutcome_set.get(stepOutcome=conditional_outcome)
+                                #PatientOutcome.objects.get(stepOutcome=conditional_outcome, patient=p)
                                 cmp1 = next_step_condition.comparator1
                                 value1 = next_step_condition.valueToCompare1
                                 cmp2 = next_step_condition.comparator2
@@ -108,6 +116,11 @@ def everything_tracker(request):
                                         if PO.value == TRUE:
                                             next_step = next_step_condition.nextStep
                                             break
+
+                            elif not next_step_condition.dependsOnStepNotDone and not next_step_condition.dependsOnOutcome:
+                                next_step = next_step_condition.nextStep
+                                break
+                            
                         if next_step:
                             PatientStep.objects.filter(last=True, patient=p).update(last=False)
                             PatientStep.objects.filter(current=True, patient=p).update(current=False, last=True)
@@ -119,25 +132,7 @@ def everything_tracker(request):
                             
                         return HttpResponseRedirect(reverse('everything_tracker'))
                     else:
-                        break
-                    
-        '''elif 'Patient Outcome' in request.POST:
-            print request.POST
-            patient_objects = Patient.objects.all().order_by('-timeIn')
-            for p in patient_objects:
-                formset = PatientOutcomeFormSet(request.POST, prefix=unicode(p.pk))
-                if formset.is_valid():
-                    for form in formset.forms:
-                        new_PO = PatientOutcome.objects.create(patient=form.cleaned_data['patient'],
-                                                               stepOutcome=form.cleaned_data['stepOutcome'],
-                                                               value=form.cleaned_data['value']
-                                                               )
-                    #here set the patient's current step to the new thingy based
-                    # off of nextstepconditions.
-                    return HttpResponseRedirect(reverse('everything_tracker'))
-                        '''
-                                                               
-
+                        break                                                           
         
     else:
         pass
@@ -147,6 +142,7 @@ def everything_tracker(request):
     patient_list = []
     for p in patient_objects:
         formset = []
+        button_display = "Submit"
         
         try:
             last_step = p.patientstep_set.get(last=True)
@@ -159,8 +155,13 @@ def everything_tracker(request):
             
         try:
             current_step = p.patientstep_set.get(current=True)
-            
             step_outcomes = current_step.step.stepoutcome_set.all()
+
+            if current_step.step == Step.objects.order_by('-number')[0]:
+                button_display = "Delete Patient"
+            elif not step_outcomes.exists():
+                button_display = "Next Step"
+                
             dict_list = []
             for step_outcome in step_outcomes:
                 dict_list.append({'patient': p, 'stepOutcome': step_outcome})
@@ -179,7 +180,7 @@ def everything_tracker(request):
         
                 
             
-        t = (p, last_step, current_step, formset)
+        t = (p, last_step, current_step, formset, button_display)
         patient_list.append(t)
     
         
