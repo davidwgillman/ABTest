@@ -1,24 +1,37 @@
+#odd
+{
+background-image: -webkit-linear-gradient(top,#eaeaea 0,#dddddd 100%);
+background-image: linear-gradient(to bottom,#eaeaea 0,#dddddd 100%);
+}
 #name
 {
 position:relative;
 left:0%;
 text-align:left;
+text-decoration:none;
 }
 #status
 {
 position:absolute;
 right:10px;
 text-align:right;
+text-decoraton:none;
 }
 #DOB
 {
 position:absolute;
 left:33%;
 text-align:center;
+text-decoration:none;
 }
 #last
 {
 position:absolute;
 right:33%;
 text-align:center;
+text-decoration:none
+}
+
+.panel-heading {
+    cursor: pointer;
 }

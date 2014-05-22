@@ -21,34 +21,27 @@
 		<div class="panel-group" id="accordion">
 			{% for patient, last_step, current_step, formset, button_display in display_list %}
 			<div class="panel panel-default">
-				<div class="panel-heading">
+				<div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse{{ forloop.counter }}" {% if forloop.counter|divisibleby:"2" %} id=odd {% endif %}>
 					<h4 class="panel-title">
-						<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="name">
+						<a id="name">
 							{{ patient.name|upper }}
 						</a>
-						<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="DOB">
+						<a id="DOB">
 							{{ patient.dob|date:"M d Y" }}
 						</a>
-						<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="last">
+						<a id="last">
 							{{ last_step }}
 						</a>
-						<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="status">
+						<a id="status">
 							{{ current_step }}
 						</a>
 						<!-- <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="flag">
 							{{ patient.flag }}
 						</a> -->
-
 					</h4>
 				</div>
 				<div id="collapse{{ forloop.counter }}" class="panel-collapse collapse" style="height: 0px;">
 					<div class="panel-body">
-						
-						<form method="post" action="">
-						{% csrf_token %}
-						<input type="submit" name="Delete Patient-{{patient.pk}}" value="Delete Patient" }} >
-						</form>
-
 						<form method="post" action="">
 						{% csrf_token %}
 						{{ formset.management_form }}
@@ -60,6 +53,10 @@
 							{% endfor %}
 						</ul>
 						<input type = "submit" name = "Patient Outcome-{{patient.pk}}" value = {{ button_display }} />
+						</form>
+						<form method="post" action="" align ="right">
+						{% csrf_token %}
+						<input type="submit" name="Delete Patient-{{patient.pk}}" value="Delete Patient" }} >
 						</form>
 					</div>
 				</div>
