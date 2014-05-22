@@ -1,6 +1,7 @@
 from django.db import models
 from django import forms
 from datetime import datetime
+from django.utils import timezone
 
 from django.core import urlresolvers
 from django.core.exceptions import ValidationError
@@ -107,8 +108,10 @@ FLAG_LEVEL_CHOICES = (
 )
         
 class FlagCondition(models.Model) :
+        step = models.ForeignKey(Step)
+        stepOutcome = models.ForeignKey(StepOutcome)
+        
 	name = models.CharField(max_length=50)
-	stepOutcome = models.ForeignKey(StepOutcome)
 	comparator1 = models.CharField(max_length=2, choices=COMPARATOR_CHOICES)
 	valueToCompare1 = models.CharField(max_length=50, blank=True)
 	comparator2 = models.CharField(max_length=2, blank=True, choices=COMPARATOR_CHOICES)
@@ -124,7 +127,24 @@ class Patient(models.Model):
 	dob = models.DateField(verbose_name='Date of Birth')
 	timeIn = models.DateTimeField('Time In')
 	timeOut = models.DateTimeField('Time Out', null=True, blank=True)
-
+	active = models.BooleanField(default=True)
+        ''' # I want to make the Patient model implicitly create it's own first PatientStep
+after it's made. However, this probably shouldn't go in the save method, as at
+this point the Patient object doesn't actually exist yet, and so can't pass itself
+as a reference to the PatientStep.
+	def save(self, *args, **kwargs):
+                try:
+                        first_step = Step.objects.get(number=1)
+                except (Step.DoesNotExist, Step.MultipleObjectsReturned):
+                        pass
+                else:
+                        if not PatientStep.objects.filter(patient=self, step=first_step).exists():
+                                PatientStep.objects.create(step=first_step, patient='self',
+                                                           current=True, start=timezone.now())
+                        
+                
+                super(Patient, self).save(*args, **kwargs)
+        '''
 
 	def __unicode__(self) :
 		return self.name + ' -- DOB ' + self.dob.strftime('%Y-%m-%d')
@@ -248,13 +268,9 @@ class BasePatientOutcomeFormSet(BaseFormSet):
 '''
 
 class PatientFlag (models.Model):
-        stepOutcome = models.ForeignKey(StepOutcome)
-        comparator1 = models.CharField(max_length=2, choices=COMPARATOR_CHOICES)
-	valueToCompare1 = models.CharField(max_length=50, blank=True)
-	comparator2 = models.CharField(max_length=2, blank=True, choices=COMPARATOR_CHOICES)
-	valueToCompare2 = models.CharField(max_length=50, blank=True)
-        level = models.CharField('Warning Level', max_length=50, blank=True, choices=FLAG_LEVEL_CHOICES)
-	name = models.CharField('Outcome Name', max_length=50)
+        patient = models.ForeignKey(Patient)
+        name = models.CharField(max_length=50)
+        level = models.CharField('Warning Level', max_length=50, choices=FLAG_LEVEL_CHOICES)
 
         def __unicode__(self) :
                 return unicode(self.name)
@@ -284,10 +300,3 @@ class PatientForm(forms.ModelForm):
                                         )
                 return cleaned_data
                         
-'''                
-class DeletePatientForm(forms.ModelForm):
-        class Meta:
-                model = Patient
-                fields = []
-
-'''    

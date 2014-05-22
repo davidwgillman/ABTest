@@ -12,6 +12,7 @@ from django.forms.formsets import formset_factory
 
 from django.views.generic import View
 
+
 def evaluate_condition(value, comparison, cmpvalue):
     if comparison == '<':
         if value < cmpvalue:
@@ -31,6 +32,61 @@ def evaluate_condition(value, comparison, cmpvalue):
     
     return False
 
+
+def get_next_step(patient, current_step):
+    next_step_conditions = current_step.nextstepcondition_set.all().order_by('priority')
+    next_step = None
+    for next_step_condition in next_step_conditions:
+        if next_step_condition.dependsOnStepNotDone:
+            step_not_done = next_step_condition.stepNotDone
+            try:
+                done = patient.patientstep_set.get(step=step_not_done)
+            except PatientStep.DoesNotExist:
+                next_step = next_step_condition.nextStep
+                break
+                                
+        elif next_step_condition.dependsOnOutcome:
+            conditional_outcome = next_step_condition.conditionalOutcome
+            PO = patient.patientoutcome_set.get(stepOutcome=conditional_outcome)
+            cmp1 = next_step_condition.comparator1
+            value1 = next_step_condition.valueToCompare1
+            cmp2 = next_step_condition.comparator2
+            value2 = next_step_condition.valueToCompare2
+            if PO and cmp1 and cmp2 and value1 and value2:
+                if evaluate_condition(PO.value, cmp1, value1) and evaluate_condition(PO.value, cmp2, value2):
+                    next_step = next_step_condition.nextStep
+                    break
+            elif PO and cmp1 and value1:
+                if evaluate_condition(PO.value, cmp1, value1):
+                    next_step = next_step_condition.nextStep
+                    break
+            elif PO and cmp2 and value2:
+                if evaluate_condition(PO.value, cmp2, value2):
+                    next_step = next_step_condition.nextStep
+                    break
+            elif PO and cmp1:
+                if cmp1 == TRUE:
+                    if PO.value == TRUE:
+                        next_step = next_step_condition.nextStep
+                        break
+            elif PO and cmp2:
+                if cmp2 == TRUE:
+                    if PO.value == TRUE:
+                        next_step = next_step_condition.nextStep
+                        break
+
+        elif not next_step_condition.dependsOnStepNotDone and not next_step_condition.dependsOnOutcome:
+            next_step = next_step_condition.nextStep
+            break
+
+    return next_step
+
+def get_flag(patient, current_step):
+    flag = None
+    #try:
+        #pass
+    
+
 def get_step_outcomes(step):
     #Create formset to put in the accordion body based
     # on patient's current step.
@@ -42,10 +98,12 @@ def get_step_outcomes(step):
     return dict_list
     
 
+
+
+
 class Tracker_View(View):
     
     def get_context(self, invalid_apf=[], invalid_fs=[], context_dict={}):
-        #context_dict = {}
         PatientOutcomeFormSet = formset_factory(PatientOutcomeForm,
                                             extra=0)
         
@@ -54,8 +112,8 @@ class Tracker_View(View):
         else:
             AddPatientform = invalid_apf
         
-        # Descending order
-        patient_objects = Patient.objects.all().order_by('-timeIn') 
+        # Patients in descending order.
+        patient_objects = Patient.objects.filter(active=True).order_by('-timeIn') 
         display_list = []
         for p in patient_objects:
             formset = []
@@ -79,11 +137,14 @@ class Tracker_View(View):
                 current_step = 'None' # Raise an additional error message?
             else:
                 current_step = current_p_step.step
+                
+                if current_step == Step.objects.order_by('-number')[0]:
+                    button_display = "Remove Patient"
+
 
                 if invalid_fs != []:
                     p_pk = invalid_fs[1]
                     if p_pk == p.pk:
-                        print "got it"
                         formset = invalid_fs[0]
                     else:
                         dict_list = get_step_outcomes(current_step)
@@ -100,7 +161,8 @@ class Tracker_View(View):
                                                     prefix=unicode(p.pk))
 
                 
-                      
+            #try:
+                #flag
             
             t = (p, last_step, current_step, formset, button_display)
             display_list.append(t)
@@ -144,11 +206,20 @@ class Tracker_View(View):
         else:
             PatientOutcomeFormSet = formset_factory(PatientOutcomeForm,
                                             extra=0)
-            patient_objects = Patient.objects.all().order_by('-timeIn')
+            patient_objects = Patient.objects.filter(active=True).order_by('-timeIn')
             for p in patient_objects:
                 if(('Patient Outcome-%s' % p.pk) in request.POST ):
-                    print request.POST
-                    dict_list = get_step_outcomes(p.patientstep_set.get(current=True).step)
+                    try:
+                        current_p_step = p.patientstep_set.get(current=True)
+                    except (PatientStep.DoesNotExist, PatientStep.MultipleObjectsReturned):
+                        '''Raise additional error message?
+                            This is most likely caused by a manager adding a patient through
+                            the admin page, but forgetting to give that patient a patientstep
+                            to start on.'''
+                        return HttpResponseRedirect(reverse('tracker_view'))
+
+                    current_step = current_p_step.step
+                    dict_list = get_step_outcomes(current_step)
                     formset = PatientOutcomeFormSet(request.POST, initial=dict_list, prefix=unicode(p.pk))
                     if formset.is_valid():
                         for form in formset.forms:
@@ -159,59 +230,25 @@ class Tracker_View(View):
                                                                stepOutcome=form.cleaned_data['stepOutcome'],
                                                                value=form.cleaned_data['value']
                                                                )
-                        current_step = p.patientstep_set.get(current=True)
-                        next_step_conditions = current_step.step.nextstepcondition_set.all().order_by('priority')
-                        next_step = None
-                        for next_step_condition in next_step_conditions:
-                            if next_step_condition.dependsOnStepNotDone:
-                                step_not_done = next_step_condition.stepNotDone
-                                try:
-                                    done = p.patientstep_set.get(step=step_not_done)
-                                except PatientStep.DoesNotExist:
-                                    next_step = next_step_condition.nextStep
-                                    break
-                                
-                            elif next_step_condition.dependsOnOutcome:
-                                conditional_outcome = next_step_condition.conditionalOutcome
-                                PO = p.patientoutcome_set.get(stepOutcome=conditional_outcome)
-                                cmp1 = next_step_condition.comparator1
-                                value1 = next_step_condition.valueToCompare1
-                                cmp2 = next_step_condition.comparator2
-                                value2 = next_step_condition.valueToCompare2
-                                if PO and cmp1 and cmp2 and value1 and value2:
-                                    if evaluate_condition(PO.value, cmp1, value1) and evaluate_condition(PO.value, cmp2, value2):
-                                        next_step = next_step_condition.nextStep
-                                        break
-                                elif PO and cmp1 and value1:
-                                    if evaluate_condition(PO.value, cmp1, value1):
-                                        next_step = next_step_condition.nextStep
-                                        break
-                                elif PO and cmp2 and value2:
-                                    if evaluate_condition(PO.value, cmp2, value2):
-                                        next_step = next_step_condition.nextStep
-                                        break
-                                elif PO and cmp1:
-                                    if cmp1 == TRUE:
-                                        if PO.value == TRUE:
-                                            next_step = next_step_condition.nextStep
-                                            break
-                                elif PO and cmp2:
-                                    if cmp2 == TRUE:
-                                        if PO.value == TRUE:
-                                            next_step = next_step_condition.nextStep
-                                            break
-
-                            elif not next_step_condition.dependsOnStepNotDone and not next_step_condition.dependsOnOutcome:
-                                next_step = next_step_condition.nextStep
-                                break
-                            
+                        current_step = p.patientstep_set.get(current=True).step
+                        if current_step == Step.objects.order_by('-number')[0]:
+                            # Maybe need to save the patient object to permanent records here?
+                            # Just need to remove the patient from the display...
+                            p.timeOut = timezone.now()
+                            p.active = False
+                            return HttpResponseRedirect(reverse('tracker_view'))
+    
+                        next_step = get_next_step(p, current_step)  
                         if next_step:
                             PatientStep.objects.filter(last=True, patient=p).update(last=False)
                             PatientStep.objects.filter(current=True, patient=p).update(current=False, last=True)
                             p_step = PatientStep(step=next_step, patient=p,
                                        current=True, start=timezone.now())
                             p_step.save()
-                                
+
+                        #flag_name, flag_level = get_flag(p, current_step)
+                        #if flag_name and flag_level:
+                                #pass
 
                             
                         return HttpResponseRedirect(reverse('tracker_view'))
@@ -220,7 +257,6 @@ class Tracker_View(View):
                         return render(request, 'tracker/CSSTracker.html', context)
                     
                 elif(('Delete Patient-%s' % p.pk) in request.POST ):
-                    #Maybe save some record of the patient here?
                     # Maybe flash an "Are you sure?" message here
                     p.delete()
                     return HttpResponseRedirect(reverse('tracker_view'))
