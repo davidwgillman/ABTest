@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from tracker.models import Step, StepOutcome, NextStepCondition, FlagCondition
-from tracker.models import Patient, PatientStep, PatientOutcome
+from tracker.models import Patient, PatientStep, PatientOutcome, PatientFlag
 
 # django.contrib.admin doesn't have nested inlines like
 #
@@ -27,21 +27,29 @@ class NextStepConditionInline(admin.StackedInline) :
 	model = NextStepCondition
 	extra = 0
 	fk_name = 'step'
-	fields = 	('step', 'priority', ('dependsOnStepNotDone', 'stepNotDone'),
-				('dependsOnOutcome', 'conditionalOutcome'), 
-				('comparator1', 'valueToCompare1'), 
-				('comparator2', 'valueToCompare2'),
-                         'nextStep'
-			)
+	fields = ('step', 'priority',
+                  ('dependsOnStepNotDone', 'stepNotDone'),
+                  ('dependsOnOutcome', 'conditionalOutcome'),
+                  ('comparator1', 'valueToCompare1'),
+                  ('comparator2', 'valueToCompare2'),
+                  'nextStep')
+
+class FlagConditionInline(admin.StackedInline) :
+        model = FlagCondition
+        extra = 0
+        #fk_name = 'step'
+        fields = ('step', 'name', 'stepOutcome',
+                  ('comparator1', 'valueToCompare1'),
+                  ('comparator2', 'valueToCompare2'), 'level')
+                  
+        
 
 class StepAdmin(admin.ModelAdmin) :
 	list_display = ('name',)
-	inlines = [StepOutcomeInline, NextStepConditionInline]
+	inlines = [StepOutcomeInline, NextStepConditionInline,
+                   FlagConditionInline]
 
 admin.site.register(Step, StepAdmin)
-#admin.site.register(StepOutcome)
-#admin.site.register(NextStepCondition)
-admin.site.register(FlagCondition)
 
 '''
 class PatientOutcomeInline(admin.StackedInline):
@@ -77,6 +85,11 @@ class PatientOutcomeInline(admin.StackedInline) :
         fk_name = 'patient'
         extra = 0
 
+class PatientFlagInline(admin.StackedInline) :
+        model = PatientFlag
+        fk_name = 'patient'
+        extra = 0
+
 
 class PatientAdmin(admin.ModelAdmin) :
         #date_hierarchy = 'timeIn'
@@ -84,6 +97,4 @@ class PatientAdmin(admin.ModelAdmin) :
 	fields = (('name', 'dob'),('timeIn', 'timeOut')) 
 
 admin.site.register(Patient, PatientAdmin)
-#admin.site.register(PatientStep)
-admin.site.register(PatientOutcome)
 
