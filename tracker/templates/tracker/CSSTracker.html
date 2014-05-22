@@ -19,7 +19,7 @@
 	
 	<body>
 		<div class="panel-group" id="accordion">
-			{% for patient, last_step, current_step, formset, button_display in patient_list %}
+			{% for patient, last_step, current_step, formset, button_display in display_list %}
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h4 class="panel-title">
@@ -30,14 +30,10 @@
 							{{ patient.dob|date:"M d Y" }}
 						</a>
 						<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="last">
-							{% if last_step == "None" %}
-								{{ last_step }}
-							{% else %}
-								{{ last_step.step }}
-							{% endif %}
+							{{ last_step }}
 						</a>
 						<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="status">
-							{{ current_step.step }}
+							{{ current_step }}
 						</a>
 						<!-- <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ forloop.counter }}" class="collapsed" id="flag">
 							{{ patient.flag }}
@@ -50,12 +46,17 @@
 						
 						<form method="post" action="">
 						{% csrf_token %}
+						<input type="submit" name="Delete Patient-{{patient.pk}}" value="Delete Patient" }} >
+						</form>
+
+						<form method="post" action="">
+						{% csrf_token %}
 						{{ formset.management_form }}
 						<ul>
 							{% for form in formset %}
 							{{ form }}
 							{% empty %}
-								<ul> No data to enter. </ul>
+								<ul> No data to enter for this step. </ul>
 							{% endfor %}
 						</ul>
 						<input type = "submit" name = "Patient Outcome-{{patient.pk}}" value = {{ button_display }} />

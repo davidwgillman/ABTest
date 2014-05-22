@@ -200,8 +200,6 @@ BOOLEAN_CHOICES = (
         (FALSE, 'False'),
         )
 class PatientOutcomeForm(forms.Form) :
-        patient = forms.ModelChoiceField(queryset=Patient.objects.all(),
-                                         widget=forms.HiddenInput())
         stepOutcome = forms.ModelChoiceField(queryset=StepOutcome.objects.all(),
                                         widget=forms.HiddenInput())
         value = forms.CharField(label='Value', max_length=50)
@@ -221,7 +219,7 @@ class PatientOutcomeForm(forms.Form) :
                 elif value_type == FLOAT_LABEL:
                         try:
                                 float(value)
-                        except ValueError:
+                        except (ValueError, TypeError):
                                 raise forms.ValidationError(
                                         ('Data for this outcome must be a %(v_t)s'),
                                                 code="Wrong data type",
@@ -282,7 +280,7 @@ class PatientForm(forms.ModelForm):
                 for patient in patients:
                         if patient.name == name and patient.dob == dob:
                                 raise forms.ValidationError(
-                                        _('A patient with this name and D.O.B. already exists.')
+                                        ('A patient with this name and D.O.B. already exists.')
                                         )
                 return cleaned_data
                         
