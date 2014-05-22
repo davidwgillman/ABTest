@@ -291,6 +291,7 @@ class Tracker_View(View):
                             # Just need to remove the patient from the display...
                             p.timeOut = timezone.now()
                             p.active = False
+                            p.save()
                             return HttpResponseRedirect(reverse('tracker_view'))
     
                         next_step = get_next_step(p, current_step)  
@@ -322,6 +323,7 @@ class Tracker_View(View):
                             flag.timeResolved = timezone.now()
                             flag.active = False
                             print flag.active
+                            flag.save()
                             return HttpResponseRedirect(reverse('tracker_view'))
 
                                 
