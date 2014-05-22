@@ -19,10 +19,15 @@
 	
 	<body>
 		<div class="panel-group" id="accordion">
-			{% for patient, last_step, current_step, formset, button_display in display_list %}
+			{% for flag_level, patient, last_step, current_step, flags, formset, button_display in display_list %}
 			<div class="panel panel-default">
 				<div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse{{ forloop.counter }}" {% if forloop.counter|divisibleby:"2" %} id=odd {% endif %}>
 					<h4 class="panel-title">
+						{% if flag_level %}
+						<a id="flag_level">
+							{{ flag_level|upper }}
+						</a>
+						{% endif %}
 						<a id="name">
 							{{ patient.name|upper }}
 						</a>
@@ -35,14 +40,18 @@
 						<a id="status">
 							{{ current_step }}
 						</a>
-
-						<a id="flag">
-							{{ flag }}
-						</a>
 					</h4>
 				</div>
 				<div id="collapse{{ forloop.counter }}" class="panel-collapse collapse" style="height: 0px;">
 					<div class="panel-body">
+						{% for flag in flags %}
+							{{ flag.name }}
+							<form method="post" action="" align="center">
+							{% csrf_token %} 
+							<input type="submit" name="Resolve Flag-{{patient.pk}}-{{flag.pk}}" value="Resolved" }} >
+							</form>
+						{% endfor %}
+
 						<form method="post" action="">
 						{% csrf_token %}
 						{{ formset.management_form }}

@@ -271,9 +271,12 @@ class PatientFlag (models.Model):
         patient = models.ForeignKey(Patient)
         name = models.CharField(max_length=50)
         level = models.CharField('Warning Level', max_length=50, choices=FLAG_LEVEL_CHOICES)
+        timeCreated = models.DateTimeField('Time Created', null=True, blank=True)
+        timeResolved = models.DateTimeField('Time Resolved', null=True, blank=True)
+        active = models.BooleanField(default=True)
 
         def __unicode__(self) :
-                return unicode(self.name)
+                return self.name
 
 class PatientForm(forms.ModelForm):
 

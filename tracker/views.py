@@ -4,7 +4,7 @@ from django.core.context_processors import csrf
 from django.http import HttpResponse, HttpResponseRedirect
 
 from tracker.models import Step, StepOutcome, NextStepCondition, FlagCondition, COMPARATOR_CHOICES, TRUE, FALSE
-from tracker.models import Patient, PatientStep, PatientOutcome, PatientForm, PatientOutcomeForm
+from tracker.models import Patient, PatientStep, PatientOutcome, PatientForm, PatientOutcomeForm, PatientFlag
 
 from django.utils import timezone
 
@@ -65,15 +65,20 @@ def get_next_step(patient, current_step):
                     next_step = next_step_condition.nextStep
                     break
             elif PO and cmp1:
-                if cmp1 == TRUE:
-                    if PO.value == TRUE:
-                        next_step = next_step_condition.nextStep
-                        break
+                if cmp1 == TRUE and PO.value == TRUE:
+                    next_step = next_step_condition.nextStep
+                    break
+                elif cmp1 == FALSE and PO.value == FALSE:
+                    next_step = next_step_condition.nextStep
+                    break
+                
             elif PO and cmp2:
-                if cmp2 == TRUE:
-                    if PO.value == TRUE:
-                        next_step = next_step_condition.nextStep
-                        break
+                if cmp2 == TRUE and PO.value == TRUE:
+                    next_step = next_step_condition.nextStep
+                    break
+                elif cmp2 == FALSE and PO.value == FALSE:
+                    next_step = next_step_condition.nextStep
+                    break
 
         elif not next_step_condition.dependsOnStepNotDone and not next_step_condition.dependsOnOutcome:
             next_step = next_step_condition.nextStep
@@ -81,10 +86,50 @@ def get_next_step(patient, current_step):
 
     return next_step
 
-def get_flag(patient, current_step):
-    flag = None
-    #try:
-        #pass
+def make_flags(patient, current_step):
+    flagconditions = current_step.flagcondition_set.all()
+    for flag_condition in flagconditions:
+        SO = flag_condition.stepOutcome
+        try:
+            PO = patient.patientoutcome_set.get(stepOutcome=SO)
+        except (PatientOutcome.DoesNotExist, PatientOutcome.MultipleObjectsReturned):
+            continue
+
+        cmp1 = flag_condition.comparator1
+        value1 = flag_condition.valueToCompare1
+        cmp2 = flag_condition.comparator2
+        value2 = flag_condition.valueToCompare2
+
+        if cmp1 and cmp2 and value1 and value2:
+            if evaluate_condition(PO.value, cmp1, value1) and evaluate_condition(PO.value, cmp2, value2):
+                PatientFlag.objects.create(patient=patient, name=flag_condition.name,
+                                           level=flag_condition.level,
+                                           timeCreated=timezone.now() )
+        elif cmp1 and value1:
+            if evaluate_condition(PO.value, cmp1, value1):
+                PatientFlag.objects.create(patient=patient, name=flag_condition.name,
+                                           level=flag_condition.level,
+                                           timeCreated=timezone.now() )
+
+        elif cmp2 and value2:
+            if evaluate_condition(PO.value, cmp2, value2):
+                PatientFlag.objects.create(patient=patient, name=flag_condition.name,
+                                           level=flag_condition.level,
+                                           timeCreated=timezone.now() )
+
+        elif cmp1:
+            if (cmp1 == TRUE and PO.value == TRUE) or (cmp1 == FALSE and PO.value == FALSE):
+                PatientFlag.objects.create(patient=patient, name=flag_condition.name,
+                                           level=flag_condition.level,
+                                           timeCreated=timezone.now() )
+                
+        elif cmp2:
+            if (cmp2 == TRUE and PO.value == TRUE) or (cmp2 == FALSE and PO.value == FALSE):
+                PatientFlag.objects.create(patient=patient, name=flag_condition.name,
+                                           level=flag_condition.level,
+                                           timeCreated=timezone.now() )
+                
+                
     
 
 def get_step_outcomes(step):
@@ -161,10 +206,20 @@ class Tracker_View(View):
                                                     prefix=unicode(p.pk))
 
                 
-            #try:
-                #flag
+            highest_flag_level = None
+            patientflags = p.patientflag_set.filter(active=True)
+            for patientflag in patientflags:
+                if not highest_flag_level:
+                    if patientflag.level == "1":
+                        highest_flag_level = "Warning"
+                    elif patientflag.level == "2":
+                        highest_flag_level = "Emergency"
+                else:
+                    if patientflag.level == "2":
+                        highest_flag_level == "Emergency"
+                print patientflag, patientflag.active
             
-            t = (p, last_step, current_step, formset, button_display)
+            t = (highest_flag_level, p, last_step, current_step, patientflags, formset, button_display)
             display_list.append(t)
     
         
@@ -246,9 +301,7 @@ class Tracker_View(View):
                                        current=True, start=timezone.now())
                             p_step.save()
 
-                        #flag_name, flag_level = get_flag(p, current_step)
-                        #if flag_name and flag_level:
-                                #pass
+                        make_flags(p, current_step)
 
                             
                         return HttpResponseRedirect(reverse('tracker_view'))
@@ -260,6 +313,16 @@ class Tracker_View(View):
                     # Maybe flash an "Are you sure?" message here
                     p.delete()
                     return HttpResponseRedirect(reverse('tracker_view'))
+
+                else:
+                    flags = p.patientflag_set.filter(active=True)
+                    for flag in flags:
+                        if(('Resolve Flag-%s-%s' %(p.pk, flag.pk)) in request.POST) :
+                            print 'got there'
+                            flag.timeResolved = timezone.now()
+                            flag.active = False
+                            print flag.active
+                            return HttpResponseRedirect(reverse('tracker_view'))
 
                                 
         
