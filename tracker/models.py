@@ -216,8 +216,8 @@ class PatientOutcome(models.Model):
 		return unicode(self.stepOutcome)
 
 BOOLEAN_CHOICES = (
-        (TRUE, 'True'),
         (FALSE, 'False'),
+        (TRUE, 'True'),
         )
 class PatientOutcomeForm(forms.Form) :
         stepOutcome = forms.ModelChoiceField(queryset=StepOutcome.objects.all(),
